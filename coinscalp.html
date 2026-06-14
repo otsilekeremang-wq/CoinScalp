@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#000000"/>
+  <title>CoinScalp</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{background:#000;color:#f4f4f5;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh}
+    input{background:#18181b;border:1px solid #3f3f46;border-radius:12px;color:#f4f4f5;font-size:14px;padding:12px 14px;width:100%;outline:none}
+    input:focus{border-color:#6366f1}
+    input::placeholder{color:#52525b}
+    button{cursor:pointer;font-family:inherit}
+
+    .screen{min-height:100vh;display:flex;flex-direction:column}
+
+    /* Setup screen */
+    .setup{padding:32px 20px;display:flex;flex-direction:column;gap:20px;max-width:480px;margin:0 auto;width:100%}
+    .logo{text-align:center;padding:20px 0}
+    .logo-title{font-size:28px;font-weight:900;letter-spacing:-1px}
+    .logo-sub{font-size:12px;color:#52525b;margin-top:4px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field-label{font-size:11px;color:#71717a;text-transform:uppercase;letter-spacing:1px}
+    .btn-primary{background:#6366f1;color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:700;width:100%;letter-spacing:0.5px}
+    .btn-primary:active{background:#4f46e5}
+    .btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+    .warning{background:#1c1400;border:1px solid #854d0e;border-radius:12px;padding:12px;font-size:11px;color:#fbbf24;line-height:1.6}
+
+    /* Header */
+    .header{background:#09090b;border-bottom:1px solid #27272a;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+    .header-left{display:flex;flex-direction:column}
+    .header-title{font-size:16px;font-weight:900;letter-spacing:-0.5px}
+    .header-sub{font-size:10px;color:#52525b;margin-top:1px}
+    .btn-icon{background:#18181b;border:1px solid #27272a;border-radius:10px;color:#a1a1aa;font-size:12px;padding:6px 10px}
+
+    /* Daily tracker */
+    .tracker{background:#18181b;border-bottom:1px solid #27272a;padding:10px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .tracker-item{text-align:center}
+    .tracker-label{font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:1px}
+    .tracker-val{font-size:14px;font-weight:800;font-family:monospace;margin-top:2px}
+    .green{color:#10b981} .red{color:#ef4444} .yellow{color:#eab308} .purple{color:#a78bfa} .gray{color:#71717a}
+
+    /* Content */
+    .content{padding:12px 16px;display:flex;flex-direction:column;gap:10px;max-width:480px;margin:0 auto;width:100%;padding-bottom:40px}
+
+    /* Scan button */
+    .btn-scan{background:#18181b;border:1px solid #6366f1;border-radius:14px;color:#a78bfa;font-size:14px;font-weight:700;padding:14px;width:100%;letter-spacing:1px}
+    .btn-scan:active{background:#1e1b4b}
+    .btn-scan:disabled{opacity:0.3;cursor:not-allowed}
+
+    /* Setup card */
+    .setup-card{background:#18181b;border:1px solid #27272a;border-radius:16px;padding:14px}
+    .setup-label{font-size:10px;color:#52525b;text-transform:uppercase;letter-spacing:2px;display:block;margin-bottom:10px}
+
+    /* Coin card */
+    .coin-card{background:#18181b;border-radius:16px;overflow:hidden}
+    .coin-card-long{border-left:4px solid #10b981}
+    .coin-card-short{border-left:4px solid #ef4444}
+    .coin-card-neutral{border-left:4px solid #52525b}
+    .coin-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+    .coin-name{font-size:16px;font-weight:900;letter-spacing:-0.5px}
+    .coin-price{font-size:13px;font-family:monospace;color:#a1a1aa;margin-top:1px}
+    .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:1.5px;color:#fff}
+    .pill-long{background:#10b981}
+    .pill-short{background:#ef4444}
+    .pill-neutral{background:#52525b}
+    .coin-body{padding:0 14px 14px}
+
+    /* Conv bar */
+    .bar-row{display:flex;justify-content:space-between;font-size:10px;color:#52525b;margin-bottom:3px}
+    .bar-track{height:6px;border-radius:999px;background:#27272a;overflow:hidden;margin-bottom:10px}
+    .bar-fill-long{background:#10b981;height:100%;border-radius:999px;transition:width 0.5s}
+    .bar-fill-short{background:#ef4444;height:100%;border-radius:999px;transition:width 0.5s}
+
+    /* Trade plan */
+    .plan{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:#09090b;border-radius:12px;padding:10px;margin-bottom:10px}
+    .plan-item{text-align:center}
+    .plan-lbl{font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
+    .plan-val{font-size:11px;font-family:monospace;font-weight:700}
+    .plan-entry{color:#f4f4f5}
+    .plan-stop{color:#ef4444}
+    .plan-target{color:#10b981}
+    .plan-rr{color:#eab308}
+
+    /* PnL display */
+    .pnl-row{display:flex;gap:4px;font-size:10px;margin-bottom:8px}
+    .pnl-chip{background:#09090b;border-radius:8px;padding:4px 8px;display:flex;flex-direction:column;gap:1px;flex:1;text-align:center}
+    .pnl-chip-lbl{font-size:9px;color:#52525b}
+    .pnl-chip-val{font-family:monospace;font-weight:700;font-size:11px}
+
+    /* OB tags */
+    .ob-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .ob-tag{font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600}
+    .ob-tag-bull{background:#052e16;color:#10b981;border:1px solid #14532d}
+    .ob-tag-bear{background:#450a0a;color:#ef4444;border:1px solid #7f1d1d}
+
+    /* Reasons */
+    .reasons{display:flex;flex-direction:column;gap:3px}
+    .reason{font-size:11px;color:#71717a;display:flex;gap:6px;line-height:1.4}
+    .dot-g{color:#10b981} .dot-r{color:#ef4444} .dot-n{color:#3f3f46}
+
+    /* Trade button */
+    .btn-trade{width:100%;padding:10px;border-radius:10px;font-size:12px;font-weight:700;border:none;margin-top:8px;letter-spacing:0.5px}
+    .btn-trade-long{background:#052e16;color:#10b981;border:1px solid #14532d}
+    .btn-trade-short{background:#450a0a;color:#ef4444;border:1px solid #7f1d1d}
+    .btn-trade:active{opacity:0.7}
+
+    /* Loading */
+    .loading{text-align:center;padding:40px 20px}
+    .loading-icon{font-size:32px;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-size:13px;color:#71717a;margin-top:10px}
+    .loading-sub{font-size:11px;color:#3f3f46;margin-top:4px}
+
+    /* Error */
+    .error{background:#450a0a;border:1px solid #7f1d1d;border-radius:14px;padding:12px;color:#fca5a5;font-size:12px}
+
+    /* Empty */
+    .empty{text-align:center;padding:40px 20px;color:#52525b;font-size:13px}
+
+    /* Trade log */
+    .trade-log{background:#18181b;border:1px solid #27272a;border-radius:14px;padding:12px}
+    .trade-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #27272a;font-size:11px}
+    .trade-row:last-child{border-bottom:none}
+
+    .rank-badge{background:#1e1b4b;color:#a78bfa;border-radius:6px;padding:2px 6px;font-size:9px;font-weight:700}
+
+    .footer{text-align:center;font-size:10px;color:#27272a;padding-top:4px}
+    .settings-btn{background:none;border:none;color:#52525b;font-size:18px;padding:4px}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useEffect, useCallback, useRef} = React;
+
+const BASE = "https://fapi.binance.com";
+const SPOT = "https://api.binance.com/api/v3";
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const fmt = (n, d=0) => n==null||isNaN(n) ? "—" : Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtP = p => p ? "$"+fmt(parseFloat(p),parseFloat(p)<10?4:parseFloat(p)<1000?2:0) : "—";
+const fmtPnl = n => (n>=0?"+$":"−$")+Math.abs(n).toFixed(2);
+
+// ── Order Block Detection ──────────────────────────────────────────────────
+function detectOrderBlocks(klines1h, klines15m, klines5m) {
+  const obs = [];
+
+  const findOBs = (klines, tf) => {
+    for(let i=2; i<klines.length-3; i++){
+      const [,o,h,l,c,v] = klines[i].map(parseFloat);
+      const nextThree = klines.slice(i+1, i+4);
+      const isBullishImpulse = nextThree.every(k => parseFloat(k[4]) > parseFloat(k[1]));
+      const isBearishImpulse = nextThree.every(k => parseFloat(k[4]) < parseFloat(k[1]));
+      const isDown = c < o;
+      const isUp = c > o;
+      const bodySize = Math.abs(c-o);
+      const avgBody = klines.slice(Math.max(0,i-10),i).reduce((s,k)=>s+Math.abs(parseFloat(k[4])-parseFloat(k[1])),0)/10;
+      if(isDown && isBullishImpulse && bodySize > avgBody*0.8){
+        obs.push({type:"bullish",high:h,low:l,open:o,close:c,tf,mitigated:false});
+      }
+      if(isUp && isBearishImpulse && bodySize > avgBody*0.8){
+        obs.push({type:"bearish",high:h,low:l,open:o,close:c,tf,mitigated:false});
+      }
+    }
+  };
+
+  if(klines1h?.length > 5) findOBs(klines1h.slice(-50), "1H");
+  if(klines15m?.length > 5) findOBs(klines15m.slice(-50), "15m");
+
+  // Take most recent 2 of each type
+  const bullish = obs.filter(o=>o.type==="bullish").slice(-2);
+  const bearish = obs.filter(o=>o.type==="bearish").slice(-2);
+  return {bullish, bearish};
+}
+
+// ── Score coin ─────────────────────────────────────────────────────────────
+function scoreCoin({price, klines1h, klines15m, klines5m, funding, lsRatio, oi24hChange, depth}) {
+  let score = 0;
+  const reasons = [];
+  const obs = detectOrderBlocks(klines1h, klines15m, klines5m);
+
+  // 1. Price near OB
+  const nearBullOB = obs.bullish.find(ob => price >= ob.low && price <= ob.high*1.002);
+  const nearBearOB = obs.bearish.find(ob => price <= ob.high && price >= ob.low*0.998);
+
+  if(nearBullOB){ score += 0.35; reasons.push(`Price in bullish OB zone (${nearBullOB.tf})`); }
+  if(nearBearOB){ score -= 0.35; reasons.push(`Price in bearish OB zone (${nearBearOB.tf})`); }
+
+  // 2. 5min tape flow
+  if(klines5m?.length > 5){
+    const recent = klines5m.slice(-6);
+    const buyVol = recent.filter(k=>parseFloat(k[4])>parseFloat(k[1])).reduce((s,k)=>s+parseFloat(k[5]),0);
+    const sellVol = recent.filter(k=>parseFloat(k[4])<parseFloat(k[1])).reduce((s,k)=>s+parseFloat(k[5]),0);
+    const total = buyVol+sellVol;
+    const buyPct = total>0 ? (buyVol/total)*100 : 50;
+    if(buyPct>60){ score+=0.2; reasons.push(`5m buy flow dominant (${Math.round(buyPct)}%)`); }
+    else if(buyPct<40){ score-=0.2; reasons.push(`5m sell flow dominant (${Math.round(100-buyPct)}%)`); }
+  }
+
+  // 3. 15m structure
+  if(klines15m?.length > 10){
+    const recent = klines15m.slice(-8);
+    const highs = recent.map(k=>parseFloat(k[2]));
+    const lows = recent.map(k=>parseFloat(k[3]));
+    const hhhl = highs[highs.length-1]>highs[0] && lows[lows.length-1]>lows[0];
+    const lhlh = highs[highs.length-1]<highs[0] && lows[lows.length-1]<lows[0];
+    if(hhhl){ score+=0.15; reasons.push("15m uptrend structure (HH/HL)"); }
+    if(lhlh){ score-=0.15; reasons.push("15m downtrend structure (LH/LL)"); }
+  }
+
+  // 4. Funding
+  if(funding!=null){
+    if(funding>0.0005){ score-=0.1; reasons.push(`Funding +${(funding*100).toFixed(4)}% — longs paying`); }
+    else if(funding<-0.0005){ score+=0.1; reasons.push(`Funding ${(funding*100).toFixed(4)}% — shorts paying`); }
+  }
+
+  // 5. L/S ratio
+  if(lsRatio!=null){
+    if(lsRatio>1.2){ score-=0.1; reasons.push(`L/S ${lsRatio.toFixed(2)} — crowd long, fade`); }
+    else if(lsRatio<0.8){ score+=0.1; reasons.push(`L/S ${lsRatio.toFixed(2)} — crowd short, fade`); }
+  }
+
+  // 6. Order book
+  if(depth){
+    const bidVol = depth.bids.slice(0,8).reduce((s,b)=>s+parseFloat(b[0])*parseFloat(b[1]),0);
+    const askVol = depth.asks.slice(0,8).reduce((s,a)=>s+parseFloat(a[0])*parseFloat(a[1]),0);
+    const bidPct = bidVol/(bidVol+askVol)*100;
+    if(bidPct>58){ score+=0.1; reasons.push(`Order book ${Math.round(bidPct)}% bid-heavy`); }
+    else if(bidPct<42){ score-=0.1; reasons.push(`Order book ${Math.round(100-bidPct)}% ask-heavy`); }
+  }
+
+  const signal = score>=0.25 ? "LONG" : score<=-0.25 ? "SHORT" : "NEUTRAL";
+  const conviction = Math.min(95, Math.round(Math.abs(score)*130));
+
+  // Build trade plan
+  let entry=price, stop=price, target=price, rr="1:1", pnlTarget=3, pnlStop=3;
+  const nearOB = nearBullOB || nearBearOB;
+  if(signal==="LONG" && nearBullOB){
+    entry = (nearBullOB.low+nearBullOB.high)/2;
+    stop = nearBullOB.low*0.998;
+    const stopDist = entry-stop;
+    target = entry + stopDist*1.5;
+    rr = "1:1.5";
+  } else if(signal==="SHORT" && nearBearOB){
+    entry = (nearBearOB.low+nearBearOB.high)/2;
+    stop = nearBearOB.high*1.002;
+    const stopDist = stop-entry;
+    target = entry - stopDist*1.5;
+    rr = "1:1.5";
+  } else {
+    const range = price*0.003;
+    if(signal==="LONG"){ stop=price-range; target=price+range*1.5; }
+    else if(signal==="SHORT"){ stop=price+range; target=price-range*1.5; }
+  }
+
+  return {signal, conviction, score, reasons: reasons.slice(0,5), entry, stop, target, rr, obs};
+}
+
+// ── Fetch coin data ────────────────────────────────────────────────────────
+async function fetchCoinData(symbol, apiKey) {
+  const headers = apiKey ? {"X-MBX-APIKEY": apiKey} : {};
+  try {
+    const [k1h, k15m, k5m, depth, fundRes, lsRes] = await Promise.all([
+      fetch(`${BASE}/fapi/v1/klines?symbol=${symbol}&interval=1h&limit=60`).then(r=>r.json()),
+      fetch(`${BASE}/fapi/v1/klines?symbol=${symbol}&interval=15m&limit=60`).then(r=>r.json()),
+      fetch(`${BASE}/fapi/v1/klines?symbol=${symbol}&interval=5m&limit=20`).then(r=>r.json()),
+      fetch(`${BASE}/fapi/v1/depth?symbol=${symbol}&limit=10`).then(r=>r.json()),
+      fetch(`${BASE}/fapi/v1/fundingRate?symbol=${symbol}&limit=1`).then(r=>r.json()),
+      fetch(`${BASE}/fapi/v1/globalLongShortAccountRatio?symbol=${symbol}&period=15m&limit=1`).then(r=>r.json()),
+    ]);
+
+    const price = parseFloat(k5m[k5m.length-1][4]);
+    const funding = fundRes?.[0]?.fundingRate ? parseFloat(fundRes[0].fundingRate) : null;
+    const lsRatio = lsRes?.[0]?.longShortRatio ? parseFloat(lsRes[0].longShortRatio) : null;
+
+    return {symbol, price, klines1h:k1h, klines15m:k15m, klines5m:k5m, depth, funding, lsRatio};
+  } catch(e) {
+    return null;
+  }
+}
+
+// ── Main App ───────────────────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState("setup"); // setup | main
+  const [apiKey, setApiKey] = useState("");
+  const [keyInput, setKeyInput] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
+  const [lastScan, setLastScan] = useState(null);
+  const [trades, setTrades] = useState([]);
+  const [dailyPnl, setDailyPnl] = useState(0);
+  const [capital, setCapital] = useState(100);
+  const [scanProgress, setScanProgress] = useState("");
+
+  const TOP_SYMBOLS = [
+    "BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT",
+    "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","DOTUSDT",
+    "LTCUSDT","UNIUSDT","ATOMUSDT","FILUSDT","APTUSDT",
+    "ARBUSDT","OPUSDT","INJUSDT","SUIUSDT","MATICUSDT"
+  ];
+
+  const scan = useCallback(async () => {
+    setScanning(true);
+    setError(null);
+    setResults([]);
+    const scored = [];
+    for(let i=0; i<TOP_SYMBOLS.length; i++){
+      const sym = TOP_SYMBOLS[i];
+      setScanProgress(`Scanning ${sym} (${i+1}/${TOP_SYMBOLS.length})…`);
+      const data = await fetchCoinData(sym, apiKey);
+      if(!data) continue;
+      const analysis = scoreCoin(data);
+      if(analysis.signal !== "NEUTRAL"){
+        scored.push({...data, ...analysis});
+      }
+      // small delay to avoid rate limit
+      await new Promise(r=>setTimeout(r,120));
+    }
+    // Sort by conviction desc
+    scored.sort((a,b)=>b.conviction-a.conviction);
+    setResults(scored.slice(0,5));
+    setLastScan(new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}));
+    setScanning(false);
+    setScanProgress("");
+  }, [apiKey]);
+
+  const recordTrade = (sym, signal, entry, stop, target) => {
+    if(trades.length >= 4){ alert("Max 4 trades reached today. Reset tomorrow."); return; }
+    const t = {id:Date.now(), sym, signal, entry, stop, target, time: new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}), status:"open"};
+    setTrades(prev=>[...prev, t]);
+  };
+
+  const closeTrade = (id, result) => {
+    setTrades(prev=>prev.map(t=>t.id===id?{...t,status:result,pnl:result==="win"?3:-3}:t));
+    setDailyPnl(prev=>prev+(result==="win"?3:-3));
+  };
+
+  const resetDay = () => { setTrades([]); setDailyPnl(0); };
+
+  const wins = trades.filter(t=>t.status==="win").length;
+  const losses = trades.filter(t=>t.status==="loss").length;
+  const openTrades = trades.filter(t=>t.status==="open").length;
+  const tradesLeft = 4 - trades.length;
+
+  if(screen === "setup"){
+    return (
+      <div className="screen">
+        <div className="setup">
+          <div className="logo">
+            <div className="logo-title">🔍 CoinScalp</div>
+            <div className="logo-sub">Top 20 Futures · Order Block Scanner</div>
+          </div>
+
+          <div className="warning">
+            ⚠️ Your API key stays on this device only. Never sent to any server except Binance. Use Read-Only permissions only.
+          </div>
+
+          <div className="field">
+            <div className="field-label">Binance API Key (optional)</div>
+            <input
+              type="password"
+              placeholder="Paste your Read-Only API key…"
+              value={keyInput}
+              onChange={e=>setKeyInput(e.target.value)}
+            />
+            <div style={{fontSize:11,color:"#52525b"}}>Leave blank to scan without auth (public data only)</div>
+          </div>
+
+          <div className="field">
+            <div className="field-label">Starting Capital (USD)</div>
+            <input
+              type="number"
+              placeholder="100"
+              defaultValue="100"
+              onChange={e=>setCapital(parseFloat(e.target.value)||100)}
+            />
+          </div>
+
+          <button className="btn-primary" onClick={()=>{ setApiKey(keyInput); setScreen("main"); }}>
+            Start Scanning →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="screen">
+      {/* Header */}
+      <div className="header">
+        <div className="header-left">
+          <div className="header-title">🔍 CoinScalp</div>
+          <div className="header-sub">Top 20 Futures · OB Scanner</div>
+        </div>
+        <button className="settings-btn" onClick={()=>setScreen("setup")}>⚙️</button>
+      </div>
+
+      {/* Daily tracker */}
+      <div className="tracker">
+        <div className="tracker-item">
+          <div className="tracker-label">Daily P&L</div>
+          <div className={`tracker-val ${dailyPnl>=0?"green":"red"}`}>{fmtPnl(dailyPnl)}</div>
+        </div>
+        <div className="tracker-item">
+          <div className="tracker-label">Trades</div>
+          <div className="tracker-val purple">{trades.length}/4</div>
+        </div>
+        <div className="tracker-item">
+          <div className="tracker-label">W / L</div>
+          <div className="tracker-val"><span className="green">{wins}</span><span className="gray">/</span><span className="red">{losses}</span></div>
+        </div>
+        <div className="tracker-item">
+          <div className="tracker-label">Capital</div>
+          <div className="tracker-val yellow">${fmt(capital+dailyPnl,0)}</div>
+        </div>
+      </div>
+
+      <div className="content">
+        {/* Scan button */}
+        <button className="btn-scan" onClick={scan} disabled={scanning||trades.length>=4}>
+          {scanning ? `⏳ ${scanProgress}` : trades.length>=4 ? "✅ Max Trades Today" : "⚡ SCAN TOP 20 COINS"}
+        </button>
+
+        {error && <div className="error">{error}</div>}
+
+        {/* Open trades */}
+        {openTrades > 0 && (
+          <div className="trade-log">
+            <span className="setup-label">Open Trades</span>
+            {trades.filter(t=>t.status==="open").map(t=>(
+              <div key={t.id} className="trade-row">
+                <div>
+                  <span style={{fontWeight:700,fontSize:12}}>{t.sym.replace("USDT","")}</span>
+                  <span style={{fontSize:10,color:"#52525b",marginLeft:6}}>{t.signal} · {t.time}</span>
+                </div>
+                <div style={{display:"flex",gap:6}}>
+                  <button style={{background:"#052e16",color:"#10b981",border:"1px solid #14532d",borderRadius:6,padding:"3px 8px",fontSize:10,fontWeight:700}} onClick={()=>closeTrade(t.id,"win")}>✓ WIN +$3</button>
+                  <button style={{background:"#450a0a",color:"#ef4444",border:"1px solid #7f1d1d",borderRadius:6,padding:"3px 8px",fontSize:10,fontWeight:700}} onClick={()=>closeTrade(t.id,"loss")}>✗ LOSS</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Scan results */}
+        {results.length === 0 && !scanning && lastScan && (
+          <div className="empty">No strong setups found at {lastScan}.<br/>Try again in 5–15 mins.</div>
+        )}
+
+        {results.map((r,i)=>{
+          const cardClass = r.signal==="LONG"?"coin-card coin-card-long":r.signal==="SHORT"?"coin-card coin-card-short":"coin-card coin-card-neutral";
+          const pillClass = r.signal==="LONG"?"pill pill-long":r.signal==="SHORT"?"pill pill-short":"pill pill-neutral";
+          const barFill = r.signal==="LONG"?"bar-fill-long":"bar-fill-short";
+          const sym = r.symbol.replace("USDT","");
+          const isPos = t=>/bull|buy|long|support|uptrend/i.test(t);
+          const isNeg = t=>/bear|sell|short|reject|down|fade/i.test(t);
+
+          return (
+            <div key={r.symbol} className={cardClass}>
+              <div className="coin-header">
+                <div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span className="coin-name">{sym}</span>
+                    <span className="rank-badge">#{i+1}</span>
+                  </div>
+                  <div className="coin-price">{fmtP(r.price)}</div>
+                </div>
+                <span className={pillClass}>{r.signal==="LONG"?"▲ LONG":"▼ SHORT"}</span>
+              </div>
+
+              <div className="coin-body">
+                {/* Conviction */}
+                <div className="bar-row"><span>Conviction</span><span style={{color:"#d4d4d8",fontFamily:"monospace"}}>{r.conviction}%</span></div>
+                <div className="bar-track">
+                  <div className={barFill} style={{width:r.conviction+"%"}}/>
+                </div>
+
+                {/* OB tags */}
+                {(r.obs?.bullish?.length>0||r.obs?.bearish?.length>0) && (
+                  <div className="ob-tags">
+                    {r.obs.bullish.map((ob,j)=>(
+                      <span key={j} className="ob-tag ob-tag-bull">Bull OB {ob.tf} ${fmt(ob.low,0)}–${fmt(ob.high,0)}</span>
+                    ))}
+                    {r.obs.bearish.map((ob,j)=>(
+                      <span key={j} className="ob-tag ob-tag-bear">Bear OB {ob.tf} ${fmt(ob.low,0)}–${fmt(ob.high,0)}</span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Trade plan */}
+                <div className="plan">
+                  <div className="plan-item"><div className="plan-lbl">Entry</div><div className="plan-val plan-entry">{fmtP(r.entry)}</div></div>
+                  <div className="plan-item"><div className="plan-lbl">Stop</div><div className="plan-val plan-stop">{fmtP(r.stop)}</div></div>
+                  <div className="plan-item"><div className="plan-lbl">Target</div><div className="plan-val plan-target">{fmtP(r.target)}</div></div>
+                  <div className="plan-item"><div className="plan-lbl">R:R</div><div className="plan-val plan-rr">{r.rr}</div></div>
+                </div>
+
+                {/* P&L chips */}
+                <div className="pnl-row">
+                  <div className="pnl-chip"><div className="pnl-chip-lbl">Target P&L</div><div className="pnl-chip-val green">+$3.00</div></div>
+                  <div className="pnl-chip"><div className="pnl-chip-lbl">Max Loss</div><div className="pnl-chip-val red">−$3.00</div></div>
+                  <div className="pnl-chip"><div className="pnl-chip-lbl">Funding</div><div className="pnl-chip-val" style={{color:r.funding>0?"#ef4444":r.funding<0?"#10b981":"#a1a1aa"}}>{r.funding!=null?(r.funding*100).toFixed(4)+"%":"—"}</div></div>
+                  <div className="pnl-chip"><div className="pnl-chip-lbl">L/S</div><div className="pnl-chip-val" style={{color:r.lsRatio>1.2?"#ef4444":r.lsRatio<0.8?"#10b981":"#a1a1aa"}}>{r.lsRatio!=null?r.lsRatio.toFixed(2):"—"}</div></div>
+                </div>
+
+                {/* Reasons */}
+                <div className="reasons">
+                  {r.reasons.map((reason,j)=>(
+                    <div key={j} className="reason">
+                      <span className={isPos(reason)&&!isNeg(reason)?"dot-g":isNeg(reason)?"dot-r":"dot-n"}>•</span>
+                      {reason}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Trade button */}
+                {trades.length < 4 && (
+                  <button
+                    className={`btn-trade ${r.signal==="LONG"?"btn-trade-long":"btn-trade-short"}`}
+                    onClick={()=>recordTrade(r.symbol, r.signal, r.entry, r.stop, r.target)}
+                  >
+                    {r.signal==="LONG"?"▲ LOG LONG":"▼ LOG SHORT"} · Target +$3
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Trade history */}
+        {trades.filter(t=>t.status!=="open").length > 0 && (
+          <div className="trade-log">
+            <span className="setup-label">Closed Trades</span>
+            {trades.filter(t=>t.status!=="open").map(t=>(
+              <div key={t.id} className="trade-row">
+                <span style={{fontWeight:700,fontSize:12}}>{t.sym.replace("USDT","")}</span>
+                <span style={{fontSize:10,color:"#52525b"}}>{t.signal} · {t.time}</span>
+                <span style={{fontFamily:"monospace",fontSize:12,fontWeight:700,color:t.status==="win"?"#10b981":"#ef4444"}}>
+                  {t.status==="win"?"+$3.00":"−$3.00"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {trades.length > 0 && (
+          <button onClick={resetDay} style={{background:"none",border:"1px solid #27272a",borderRadius:12,color:"#52525b",fontSize:12,padding:"10px",width:"100%"}}>
+            Reset Day
+          </button>
+        )}
+
+        <div className="footer">CoinScalp · Binance Futures · OB Detection · Top 20</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+</script>
+</body>
+</html>
